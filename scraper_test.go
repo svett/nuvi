@@ -53,7 +53,7 @@ var _ = Describe("Scraper", func() {
 		}
 
 		extractor = &fakes.FakeExtractor{}
-		extractor.ExtractReturns([]string{"report.zip", "photos.zip"})
+		extractor.ExtractReturns([]string{"report.zip", "photos.zip"}, nil)
 
 		archiver = &fakes.FakeArchiver{}
 		archiver.UnzipStub = func(reader io.Reader) (io.ReadCloser, error) {
@@ -106,6 +106,17 @@ var _ = Describe("Scraper", func() {
 		Expect(extractor.ExtractArgsForCall(0)).To(Equal(page))
 	})
 
+	Context("when the link extraction fails", func() {
+		BeforeEach(func() {
+			extractor.ExtractReturns([]string{}, fmt.Errorf("Oh no exctract err!"))
+		})
+
+		It("returns the error", func() {
+			Expect(scraper.Scrape("www.example.com")).To(MatchError("Oh no exctract err!"))
+			Expect(downloader.DownloadCallCount()).To(Equal(1))
+		})
+	})
+
 	It("downloads the extracted files", func() {
 		Expect(scraper.Scrape("www.example.com")).To(Succeed())
 		Expect(downloader.DownloadCallCount()).To(Equal(3))
@@ -115,7 +126,7 @@ var _ = Describe("Scraper", func() {
 
 	Context("when download of extracted files fails", func() {
 		BeforeEach(func() {
-			extractor.ExtractReturns([]string{"report.zip", "error.zip", "photos.zip"})
+			extractor.ExtractReturns([]string{"report.zip", "error.zip", "photos.zip"}, nil)
 		})
 
 		It("continues to download the rest", func() {

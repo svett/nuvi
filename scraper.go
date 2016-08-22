@@ -19,7 +19,7 @@ type Downloader interface {
 // Extractor extracts a content of the page
 type Extractor interface {
 	// Extract extracts a links/anchors from a io.Reader
-	Extract(reader io.Reader) []string
+	Extract(reader io.Reader) ([]string, error)
 }
 
 // Archiver unarchive zip archives
@@ -50,7 +50,11 @@ func (scraper *Scraper) Scrape(url string) error {
 	}
 	defer reader.Close()
 
-	archives := scraper.Extractor.Extract(reader)
+	archives, err := scraper.Extractor.Extract(reader)
+	if err != nil {
+		return err
+	}
+
 	for _, archive := range archives {
 		archiveURL := fmt.Sprintf("%s/%s", url, archive)
 		zipfile, err := scraper.Downloader.Download(archiveURL)

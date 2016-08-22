@@ -9,17 +9,18 @@ import (
 )
 
 type FakeExtractor struct {
-	ExtractStub        func(reader io.Reader) []string
+	ExtractStub        func(reader io.Reader) ([]string, error)
 	extractMutex       sync.RWMutex
 	extractArgsForCall []struct {
 		reader io.Reader
 	}
 	extractReturns struct {
 		result1 []string
+		result2 error
 	}
 }
 
-func (fake *FakeExtractor) Extract(reader io.Reader) []string {
+func (fake *FakeExtractor) Extract(reader io.Reader) ([]string, error) {
 	fake.extractMutex.Lock()
 	fake.extractArgsForCall = append(fake.extractArgsForCall, struct {
 		reader io.Reader
@@ -28,7 +29,7 @@ func (fake *FakeExtractor) Extract(reader io.Reader) []string {
 	if fake.ExtractStub != nil {
 		return fake.ExtractStub(reader)
 	} else {
-		return fake.extractReturns.result1
+		return fake.extractReturns.result1, fake.extractReturns.result2
 	}
 }
 
@@ -44,11 +45,12 @@ func (fake *FakeExtractor) ExtractArgsForCall(i int) io.Reader {
 	return fake.extractArgsForCall[i].reader
 }
 
-func (fake *FakeExtractor) ExtractReturns(result1 []string) {
+func (fake *FakeExtractor) ExtractReturns(result1 []string, result2 error) {
 	fake.ExtractStub = nil
 	fake.extractReturns = struct {
 		result1 []string
-	}{result1}
+		result2 error
+	}{result1, result2}
 }
 
 var _ nuvi.Extractor = new(FakeExtractor)
