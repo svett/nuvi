@@ -13,11 +13,11 @@ import (
 
 var _ = Describe("LinkExtractor", func() {
 	var (
-		extractor *nuvi.LinkExtractor
+		extractor nuvi.LinkExtractor
 	)
 
 	BeforeEach(func() {
-		extractor = &nuvi.LinkExtractor{}
+		extractor = nuvi.LinkExtractor{}
 	})
 
 	It("extracts only the zip links", func() {
