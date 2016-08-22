@@ -8,10 +8,13 @@ import (
 )
 
 // LinkExtractor extract <a href="*.zip"> links
-type LinkExtractor struct{}
+type LinkExtractor struct {
+	// FileExt are the file extension
+	FileExt string
+}
 
 // Extract extracts html anchor links
-func (extractor LinkExtractor) Extract(reader io.Reader) ([]string, error) {
+func (extractor *LinkExtractor) Extract(reader io.Reader) ([]string, error) {
 	var links []string
 	tokenizer := html.NewTokenizer(reader)
 
@@ -36,7 +39,7 @@ func (extractor LinkExtractor) Extract(reader io.Reader) ([]string, error) {
 		}
 
 		for _, attr := range token.Attr {
-			if attr.Key == "href" && strings.HasSuffix(attr.Val, ".zip") {
+			if attr.Key == "href" && strings.HasSuffix(attr.Val, extractor.FileExt) {
 				links = append(links, attr.Val)
 			}
 		}
