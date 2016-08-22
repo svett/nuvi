@@ -23,7 +23,7 @@ var _ = Describe("Scraper", func() {
 		xmlWallpaperArchive *fakes.FakeReadCloser
 		downloader          *fakes.FakeDownloader
 		extractor           *fakes.FakeExtractor
-		archiver            *fakes.FakeArchiver
+		archiveWalker       *fakes.FakeArchiveWalker
 		cacher              *fakes.FakeCacher
 
 		scraper *nuvi.Scraper
@@ -57,16 +57,16 @@ var _ = Describe("Scraper", func() {
 		extractor = &fakes.FakeExtractor{}
 		extractor.ExtractReturns([]string{"report.zip", "photos.zip"}, nil)
 
-		archiver = &fakes.FakeArchiver{}
-		archiver.UnzipStub = func(reader io.Reader) ([]io.ReadCloser, error) {
+		archiveWalker = &fakes.FakeArchiveWalker{}
+		archiveWalker.WalkStub = func(reader io.Reader, walk nuvi.ArchiveWalkerFunc) {
 			if reader == reportArchive {
 				Expect(reportArchive.CloseCallCount()).To(Equal(0))
-				return []io.ReadCloser{xmlReportArchive}, nil
+				walk(xmlReportArchive)
 			} else if reader == photosArchive {
 				Expect(photosArchive.CloseCallCount()).To(Equal(0))
-				return []io.ReadCloser{xmlPhotosArchive, xmlWallpaperArchive}, nil
+				walk(xmlPhotosArchive)
+				walk(xmlWallpaperArchive)
 			}
-			return nil, fmt.Errorf("Oh no unzip error!")
 		}
 
 		cacher = &fakes.FakeCacher{}
@@ -77,10 +77,10 @@ var _ = Describe("Scraper", func() {
 		}
 
 		scraper = &nuvi.Scraper{
-			Downloader: downloader,
-			Extractor:  extractor,
-			Archiver:   archiver,
-			Cacher:     cacher,
+			Downloader:    downloader,
+			Extractor:     extractor,
+			ArchiveWalker: archiveWalker,
+			Cacher:        cacher,
 		}
 	})
 
@@ -136,20 +136,28 @@ var _ = Describe("Scraper", func() {
 			Expect(downloader.DownloadCallCount()).To(Equal(4))
 			Expect(downloader.DownloadArgsForCall(3)).To(Equal("www.example.com/photos.zip"))
 
-			Expect(archiver.UnzipCallCount()).To(Equal(2))
-			Expect(archiver.UnzipArgsForCall(0)).To(Equal(reportArchive))
-			Expect(archiver.UnzipArgsForCall(1)).To(Equal(photosArchive))
+			Expect(archiveWalker.WalkCallCount()).To(Equal(2))
+
+			file, _ := archiveWalker.WalkArgsForCall(0)
+			Expect(file).To(Equal(reportArchive))
+
+			file, _ = archiveWalker.WalkArgsForCall(1)
+			Expect(file).To(Equal(photosArchive))
 
 			Expect(reportArchive.CloseCallCount()).To(Equal(1))
 			Expect(photosArchive.CloseCallCount()).To(Equal(1))
 		})
 	})
 
-	It("unzip the downloaded files", func() {
+	It("walk and unzip the downloaded files", func() {
 		Expect(scraper.Scrape("www.example.com")).To(Succeed())
-		Expect(archiver.UnzipCallCount()).To(Equal(2))
-		Expect(archiver.UnzipArgsForCall(0)).To(Equal(reportArchive))
-		Expect(archiver.UnzipArgsForCall(1)).To(Equal(photosArchive))
+		Expect(archiveWalker.WalkCallCount()).To(Equal(2))
+
+		file, _ := archiveWalker.WalkArgsForCall(0)
+		Expect(file).To(Equal(reportArchive))
+
+		file, _ = archiveWalker.WalkArgsForCall(1)
+		Expect(file).To(Equal(photosArchive))
 	})
 
 	It("caches the unzipped files", func() {
@@ -158,34 +166,5 @@ var _ = Describe("Scraper", func() {
 		Expect(cacher.CacheArgsForCall(0)).To(Equal(xmlReportArchive))
 		Expect(cacher.CacheArgsForCall(1)).To(Equal(xmlPhotosArchive))
 		Expect(cacher.CacheArgsForCall(2)).To(Equal(xmlWallpaperArchive))
-	})
-
-	Context("when the unzip fails", func() {
-		BeforeEach(func() {
-			archiver.UnzipStub = func(reader io.Reader) ([]io.ReadCloser, error) {
-				if reader == photosArchive {
-					return []io.ReadCloser{xmlPhotosArchive}, nil
-				}
-				return nil, fmt.Errorf("Oh no unzip error!")
-			}
-			Expect(scraper.Scrape("www.example.com")).To(Succeed())
-		})
-
-		It("does not cache all files", func() {
-			Expect(cacher.CacheCallCount()).To(Equal(1))
-			Expect(cacher.CacheArgsForCall(0)).To(Equal(xmlPhotosArchive))
-			Expect(xmlPhotosArchive.CloseCallCount()).To(Equal(1))
-		})
-
-		It("continues to unzip the other files", func() {
-			Expect(archiver.UnzipCallCount()).To(Equal(2))
-			Expect(archiver.UnzipArgsForCall(0)).To(Equal(reportArchive))
-			Expect(archiver.UnzipArgsForCall(1)).To(Equal(photosArchive))
-		})
-
-		It("does close the file", func() {
-			Expect(reportArchive.CloseCallCount()).To(Equal(1))
-			Expect(photosArchive.CloseCallCount()).To(Equal(1))
-		})
 	})
 })

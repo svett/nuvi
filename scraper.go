@@ -7,7 +7,7 @@ import (
 
 //go:generate counterfeiter . Downloader
 //go:generate counterfeiter . Extractor
-//go:generate counterfeiter . Archiver
+//go:generate counterfeiter . ArchiveWalker
 //go:generate counterfeiter . Cacher
 
 // Downloader downloads a content from URL
@@ -22,10 +22,13 @@ type Extractor interface {
 	Extract(reader io.Reader) ([]string, error)
 }
 
-// Archiver unarchive zip archives
-type Archiver interface {
-	// Unzip unzips the content of io.Reader
-	Unzip(reader io.Reader) ([]io.ReadCloser, error)
+// ArchiveWalkerFunc callback function
+type ArchiveWalkerFunc func(io.Reader)
+
+// ArchiveWalker unarchive zip archives
+type ArchiveWalker interface {
+	// Walk walks throu the content of io.Reader
+	Walk(reader io.Reader, walker ArchiveWalkerFunc)
 }
 
 // Cacher caches any content
@@ -36,10 +39,10 @@ type Cacher interface {
 
 // Scraper scrapes a web content
 type Scraper struct {
-	Downloader Downloader
-	Extractor  Extractor
-	Archiver   Archiver
-	Cacher     Cacher
+	Downloader    Downloader
+	Extractor     Extractor
+	ArchiveWalker ArchiveWalker
+	Cacher        Cacher
 }
 
 // Scrape scrapes a web page
@@ -61,13 +64,11 @@ func (scraper *Scraper) Scrape(url string) error {
 		if err != nil {
 			continue
 		}
-		files, err := scraper.Archiver.Unzip(zipfile)
-		if err == nil {
-			for _, file := range files {
-				scraper.Cacher.Cache(file)
-				file.Close()
-			}
-		}
+
+		scraper.ArchiveWalker.Walk(zipfile, func(file io.Reader) {
+			scraper.Cacher.Cache(file)
+		})
+
 		zipfile.Close()
 	}
 	return nil
