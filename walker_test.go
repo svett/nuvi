@@ -13,13 +13,20 @@ import (
 )
 
 var _ = Describe("ZIPWalker", func() {
-	var walker nuvi.ZIPWalker
+	var (
+		fileExt string
+		walker  *nuvi.ZIPWalker
+	)
 
 	BeforeEach(func() {
-		walker = nuvi.ZIPWalker{}
+		fileExt = ".xml"
 	})
 
-	It("unzips an archive that contains a directories", func() {
+	JustBeforeEach(func() {
+		walker = &nuvi.ZIPWalker{FileExt: fileExt}
+	})
+
+	It("walks through an XML files", func() {
 		reader, err := os.Open("assets/info.zip")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -29,6 +36,24 @@ var _ = Describe("ZIPWalker", func() {
 		})
 
 		Expect(count).To(Equal(3))
+	})
+
+	Context("when txt file is extracted", func() {
+		BeforeEach(func() {
+			fileExt = ".txt"
+		})
+		It("walks through an TXT files", func() {
+			reader, err := os.Open("assets/info.zip")
+			Expect(err).NotTo(HaveOccurred())
+
+			count := 0
+			walker.Walk(reader, func(file io.Reader) {
+				count++
+			})
+
+			Expect(count).To(Equal(1))
+		})
+
 	})
 
 	Context("when the zip archive is corrupted", func() {

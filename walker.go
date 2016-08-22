@@ -9,16 +9,19 @@ import (
 )
 
 // ZIPWalker unzip *.zip files
-type ZIPWalker struct{}
+type ZIPWalker struct {
+	// FileExt specifies the file extetnsion
+	FileExt string
+}
 
-// Unzip unzips a *.zip files
+// Walk unzips a *.zip files
 //
 // The original implementation can be found in my blog
 // http://blog.ralch.com/tutorial/golang-working-with-zip/
 //
 // ZIP algorithm is using random access so unforthunately
 // we need to read the whole file before we unzip it
-func (walker ZIPWalker) Walk(reader io.Reader, walk ArchiveWalkerFunc) {
+func (walker *ZIPWalker) Walk(reader io.Reader, walk ArchiveWalkerFunc) {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return
@@ -34,7 +37,7 @@ func (walker ZIPWalker) Walk(reader io.Reader, walk ArchiveWalkerFunc) {
 			continue
 		}
 
-		if !strings.HasSuffix(file.Name, ".xml") {
+		if !strings.HasSuffix(file.Name, walker.FileExt) {
 			continue
 		}
 
