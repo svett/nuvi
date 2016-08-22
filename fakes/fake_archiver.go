@@ -9,18 +9,18 @@ import (
 )
 
 type FakeArchiver struct {
-	UnzipStub        func(reader io.Reader) (io.ReadCloser, error)
+	UnzipStub        func(reader io.Reader) ([]io.ReadCloser, error)
 	unzipMutex       sync.RWMutex
 	unzipArgsForCall []struct {
 		reader io.Reader
 	}
 	unzipReturns struct {
-		result1 io.ReadCloser
+		result1 []io.ReadCloser
 		result2 error
 	}
 }
 
-func (fake *FakeArchiver) Unzip(reader io.Reader) (io.ReadCloser, error) {
+func (fake *FakeArchiver) Unzip(reader io.Reader) ([]io.ReadCloser, error) {
 	fake.unzipMutex.Lock()
 	fake.unzipArgsForCall = append(fake.unzipArgsForCall, struct {
 		reader io.Reader
@@ -45,10 +45,10 @@ func (fake *FakeArchiver) UnzipArgsForCall(i int) io.Reader {
 	return fake.unzipArgsForCall[i].reader
 }
 
-func (fake *FakeArchiver) UnzipReturns(result1 io.ReadCloser, result2 error) {
+func (fake *FakeArchiver) UnzipReturns(result1 []io.ReadCloser, result2 error) {
 	fake.UnzipStub = nil
 	fake.unzipReturns = struct {
-		result1 io.ReadCloser
+		result1 []io.ReadCloser
 		result2 error
 	}{result1, result2}
 }

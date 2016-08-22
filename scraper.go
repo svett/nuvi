@@ -25,7 +25,7 @@ type Extractor interface {
 // Archiver unarchive zip archives
 type Archiver interface {
 	// Unzip unzips the content of io.Reader
-	Unzip(reader io.Reader) (io.ReadCloser, error)
+	Unzip(reader io.Reader) ([]io.ReadCloser, error)
 }
 
 // Cacher caches any content
@@ -61,10 +61,12 @@ func (scraper *Scraper) Scrape(url string) error {
 		if err != nil {
 			continue
 		}
-		xmlReader, err := scraper.Archiver.Unzip(zipfile)
+		files, err := scraper.Archiver.Unzip(zipfile)
 		if err == nil {
-			scraper.Cacher.Cache(xmlReader)
-			xmlReader.Close()
+			for _, file := range files {
+				scraper.Cacher.Cache(file)
+				file.Close()
+			}
 		}
 		zipfile.Close()
 	}

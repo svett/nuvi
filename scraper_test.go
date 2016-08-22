@@ -15,15 +15,16 @@ import (
 
 var _ = Describe("Scraper", func() {
 	var (
-		page             *fakes.FakeReadCloser
-		reportArchive    *fakes.FakeReadCloser
-		photosArchive    *fakes.FakeReadCloser
-		xmlReportArchive *fakes.FakeReadCloser
-		xmlPhotosArchive *fakes.FakeReadCloser
-		downloader       *fakes.FakeDownloader
-		extractor        *fakes.FakeExtractor
-		archiver         *fakes.FakeArchiver
-		cacher           *fakes.FakeCacher
+		page                *fakes.FakeReadCloser
+		reportArchive       *fakes.FakeReadCloser
+		photosArchive       *fakes.FakeReadCloser
+		xmlReportArchive    *fakes.FakeReadCloser
+		xmlPhotosArchive    *fakes.FakeReadCloser
+		xmlWallpaperArchive *fakes.FakeReadCloser
+		downloader          *fakes.FakeDownloader
+		extractor           *fakes.FakeExtractor
+		archiver            *fakes.FakeArchiver
+		cacher              *fakes.FakeCacher
 
 		scraper *nuvi.Scraper
 	)
@@ -36,6 +37,7 @@ var _ = Describe("Scraper", func() {
 
 		xmlReportArchive = &fakes.FakeReadCloser{}
 		xmlPhotosArchive = &fakes.FakeReadCloser{}
+		xmlWallpaperArchive = &fakes.FakeReadCloser{}
 
 		downloader = &fakes.FakeDownloader{}
 		downloader.DownloadStub = func(url string) (io.ReadCloser, error) {
@@ -56,13 +58,13 @@ var _ = Describe("Scraper", func() {
 		extractor.ExtractReturns([]string{"report.zip", "photos.zip"}, nil)
 
 		archiver = &fakes.FakeArchiver{}
-		archiver.UnzipStub = func(reader io.Reader) (io.ReadCloser, error) {
+		archiver.UnzipStub = func(reader io.Reader) ([]io.ReadCloser, error) {
 			if reader == reportArchive {
 				Expect(reportArchive.CloseCallCount()).To(Equal(0))
-				return xmlReportArchive, nil
+				return []io.ReadCloser{xmlReportArchive}, nil
 			} else if reader == photosArchive {
 				Expect(photosArchive.CloseCallCount()).To(Equal(0))
-				return xmlPhotosArchive, nil
+				return []io.ReadCloser{xmlPhotosArchive, xmlWallpaperArchive}, nil
 			}
 			return nil, fmt.Errorf("Oh no unzip error!")
 		}
@@ -150,11 +152,19 @@ var _ = Describe("Scraper", func() {
 		Expect(archiver.UnzipArgsForCall(1)).To(Equal(photosArchive))
 	})
 
+	It("caches the unzipped files", func() {
+		Expect(scraper.Scrape("www.example.com")).To(Succeed())
+		Expect(cacher.CacheCallCount()).To(Equal(3))
+		Expect(cacher.CacheArgsForCall(0)).To(Equal(xmlReportArchive))
+		Expect(cacher.CacheArgsForCall(1)).To(Equal(xmlPhotosArchive))
+		Expect(cacher.CacheArgsForCall(2)).To(Equal(xmlWallpaperArchive))
+	})
+
 	Context("when the unzip fails", func() {
 		BeforeEach(func() {
-			archiver.UnzipStub = func(reader io.Reader) (io.ReadCloser, error) {
+			archiver.UnzipStub = func(reader io.Reader) ([]io.ReadCloser, error) {
 				if reader == photosArchive {
-					return xmlPhotosArchive, nil
+					return []io.ReadCloser{xmlPhotosArchive}, nil
 				}
 				return nil, fmt.Errorf("Oh no unzip error!")
 			}
