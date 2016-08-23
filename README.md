@@ -30,7 +30,7 @@ The `navi` binary can be executed with the following arguments:
 $ nuvi -url=http_url_to_desired_page \
        -redis-addr=redis_server_host_and_port \
        -redis-password=redis_server_password \
-       -max-parallel-download-conn \
+       -max-parallel-download-conn=5
 ```
 
 #### Example
