@@ -37,6 +37,7 @@ func main() {
 		Password: redisPassword,
 		DB:       0,
 	})
+	defer client.Close()
 
 	_, err := client.Ping().Result()
 	if err != nil {
