@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"gopkg.in/redis.v4"
+
 	"github.com/svett/nuvi"
 	"github.com/svett/nuvi/fakes"
 
@@ -27,8 +29,9 @@ var _ = Describe("RedisCacher", func() {
 	})
 
 	It("appends the content to a list", func() {
+		client.LRangeReturns(redis.NewStringSliceCmd())
 		cacher.Cache(strings.NewReader("Financial Times"))
-		Expect(client.LPushCallCount()).To(Equal(1))
+		Expect(client.LRangeCallCount()).To(Equal(1))
 
 		key, values := client.LPushArgsForCall(0)
 		Expect(key).To(Equal("NEWS_XML"))
@@ -41,7 +44,7 @@ var _ = Describe("RedisCacher", func() {
 			reader := &fakes.FakeReadCloser{}
 			reader.ReadReturns(0, fmt.Errorf("Oh no!"))
 			cacher.Cache(reader)
-			Expect(client.LPushCallCount()).To(Equal(0))
+			Expect(client.LRangeCallCount()).To(Equal(0))
 		})
 	})
 })

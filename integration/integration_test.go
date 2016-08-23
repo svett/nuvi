@@ -11,7 +11,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/svett/nuvi/integration/utils"
 
 	"github.com/onsi/gomega/gexec"
 )
@@ -23,11 +22,7 @@ var _ = Describe("Integration", func() {
 	)
 
 	BeforeEach(func() {
-		redisClient = redis.NewClient(&redis.Options{
-			Addr:     fmt.Sprintf("localhost:%d", utils.RedisPort),
-			Password: "",
-			DB:       0,
-		})
+		redisClient = newRedisClient()
 
 		page, err := os.Open("../assets/index.html")
 		Expect(err).NotTo(HaveOccurred())

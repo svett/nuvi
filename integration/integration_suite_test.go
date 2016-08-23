@@ -1,7 +1,10 @@
 package integration_test
 
 import (
+	"fmt"
 	"os/exec"
+
+	"gopkg.in/redis.v4"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -40,3 +43,11 @@ var _ = AfterSuite(func() {
 	server.Stop()
 	gexec.CleanupBuildArtifacts()
 })
+
+func newRedisClient() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("localhost:%d", utils.RedisPort),
+		Password: "",
+		DB:       0,
+	})
+}
