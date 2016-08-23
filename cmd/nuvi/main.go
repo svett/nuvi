@@ -20,9 +20,9 @@ var (
 
 func init() {
 	flag.StringVar(&url, "url", "", "Web URL")
-	flag.StringVar(&redisAddr, "redisAddr", "localhost:6379", "Redis Addr")
-	flag.StringVar(&redisPassword, "redisPassword", "", "Redis Password")
-	flag.IntVar(&maxConn, "maxConn", 4, "Max download connections")
+	flag.StringVar(&redisAddr, "redis-addr", "localhost:6379", "Redis Addr")
+	flag.StringVar(&redisPassword, "redis-password", "", "Redis Password")
+	flag.IntVar(&maxConn, "max-parallel-download-conn", 4, "Max download connections")
 }
 
 func main() {

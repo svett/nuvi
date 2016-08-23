@@ -68,7 +68,7 @@ var _ = Describe("Integration", func() {
 
 	Context("when the server is not available", func() {
 		It("returns an error", func() {
-			session, err := runScraper("-redisAddr=localhost:1234", "-url=www.example.com")
+			session, err := runScraper("-redis-addr=localhost:1234", "-url=www.example.com")
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 		})
@@ -84,7 +84,7 @@ var _ = Describe("Integration", func() {
 
 	Context("when the password is wrong", func() {
 		It("returns an error", func() {
-			session, err := runScraper("-redisPassword=wrong", fmt.Sprintf("-url=%s", httpServer.URL))
+			session, err := runScraper("-redis-password=wrong", fmt.Sprintf("-url=%s", httpServer.URL))
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 		})
