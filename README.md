@@ -80,6 +80,8 @@ $ ginkgo integration/
 $ ginkgo .
 ```
 
+Presently the test coverage is **91.7%**.
+
 ### License
 
 **MIT License**
