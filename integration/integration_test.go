@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"os"
 
 	"gopkg.in/redis.v4"
@@ -13,12 +14,11 @@ import (
 	"github.com/svett/nuvi/integration/utils"
 
 	"github.com/onsi/gomega/gexec"
-	"github.com/onsi/gomega/ghttp"
 )
 
 var _ = Describe("Integration", func() {
 	var (
-		httpServer  *ghttp.Server
+		httpServer  *httptest.Server
 		redisClient *redis.Client
 	)
 
@@ -29,30 +29,32 @@ var _ = Describe("Integration", func() {
 			DB:       0,
 		})
 
-		httpServer = ghttp.NewServer()
-		httpServer.AllowUnhandledRequests = true
-
 		page, err := os.Open("../assets/index.html")
 		Expect(err).NotTo(HaveOccurred())
+		defer page.Close()
 
 		data, err := ioutil.ReadAll(page)
 		Expect(err).NotTo(HaveOccurred())
 
-		httpServer.AppendHandlers(ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/"),
-			ghttp.RespondWith(http.StatusOK, string(data)),
-		))
-
 		zip, err := os.Open("../assets/info.zip")
 		Expect(err).NotTo(HaveOccurred())
+		defer zip.Close()
 
 		zipData, err := ioutil.ReadAll(zip)
 		Expect(err).NotTo(HaveOccurred())
 
-		httpServer.AppendHandlers(ghttp.CombineHandlers(
-			ghttp.VerifyRequest("GET", "/info.zip"),
-			ghttp.RespondWith(http.StatusOK, string(zipData)),
-		))
+		httpServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/" {
+				w.WriteHeader(http.StatusOK)
+				w.Write(data)
+			} else if r.URL.Path == "/info.zip" {
+				w.WriteHeader(http.StatusOK)
+				w.Write(zipData)
+				return
+			}
+
+			w.WriteHeader(http.StatusNotFound)
+		}))
 	})
 
 	AfterEach(func() {
@@ -61,7 +63,7 @@ var _ = Describe("Integration", func() {
 	})
 
 	It("scrapes and caches the dired files", func() {
-		session, err := runScraper(fmt.Sprintf("-url=%s", httpServer.URL()))
+		session, err := runScraper(fmt.Sprintf("-url=%s", httpServer.URL))
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gexec.Exit(0))
 
@@ -88,7 +90,7 @@ var _ = Describe("Integration", func() {
 
 	Context("when the password is wrong", func() {
 		It("returns an error", func() {
-			session, err := runScraper("-redisPassword=wrong", fmt.Sprintf("-url=%s", httpServer.URL()))
+			session, err := runScraper("-redisPassword=wrong", fmt.Sprintf("-url=%s", httpServer.URL))
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(1))
 		})
