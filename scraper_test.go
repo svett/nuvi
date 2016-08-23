@@ -81,6 +81,7 @@ var _ = Describe("Scraper", func() {
 			Extractor:     extractor,
 			ArchiveWalker: archiveWalker,
 			Cacher:        cacher,
+			Logger:        &fakes.FakeLogger{},
 		}
 	})
 

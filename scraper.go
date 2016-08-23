@@ -9,6 +9,13 @@ import (
 //go:generate counterfeiter . Extractor
 //go:generate counterfeiter . ArchiveWalker
 //go:generate counterfeiter . Cacher
+//go:generate counterfeiter . Logger
+
+// Logger logs messages
+type Logger interface {
+	Println(v ...interface{})
+	Printf(format string, v ...interface{})
+}
 
 // Downloader downloads a content from URL
 type Downloader interface {
@@ -43,16 +50,19 @@ type Scraper struct {
 	Extractor     Extractor
 	ArchiveWalker ArchiveWalker
 	Cacher        Cacher
+	Logger        Logger
 }
 
 // Scrape scrapes a web page
 func (scraper *Scraper) Scrape(url string) error {
+	scraper.Logger.Printf("Downloading %s", url)
 	reader, err := scraper.Downloader.Download(url)
 	if err != nil {
 		return err
 	}
 	defer reader.Close()
 
+	scraper.Logger.Printf("Extracting %s", url)
 	archives, err := scraper.Extractor.Extract(reader)
 	if err != nil {
 		return err
@@ -60,11 +70,14 @@ func (scraper *Scraper) Scrape(url string) error {
 
 	for _, archive := range archives {
 		archiveURL := fmt.Sprintf("%s/%s", url, archive)
+		scraper.Logger.Printf("Downloading %s", archiveURL)
 		zipfile, err := scraper.Downloader.Download(archiveURL)
 		if err != nil {
+			scraper.Logger.Printf("Downloading %s failed with error %v", archiveURL, err)
 			continue
 		}
 
+		scraper.Logger.Printf("Browsing %s", archiveURL)
 		scraper.ArchiveWalker.Walk(zipfile, func(file io.Reader) {
 			scraper.Cacher.Cache(file)
 		})

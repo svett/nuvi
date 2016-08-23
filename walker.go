@@ -12,6 +12,8 @@ import (
 type ZIPWalker struct {
 	// FileExt specifies the file extetnsion
 	FileExt string
+	// Logger logs information
+	Logger Logger
 }
 
 // Walk unzips a *.zip files
@@ -43,6 +45,7 @@ func (walker *ZIPWalker) Walk(reader io.Reader, walk ArchiveWalkerFunc) {
 
 		unzippedFile, err := file.Open()
 		if err == nil {
+			walker.Logger.Printf("Accessing %s from an archive", file.Name)
 			walk(unzippedFile)
 			unzippedFile.Close()
 		}

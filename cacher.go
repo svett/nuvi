@@ -18,6 +18,7 @@ type RedisClient interface {
 type RedisCacher struct {
 	Key    string
 	Client RedisClient
+	Logger Logger
 }
 
 // Cache caches the content of io.Reader
@@ -26,6 +27,6 @@ func (cacher *RedisCacher) Cache(reader io.Reader) {
 	if err != nil {
 		return
 	}
-
+	cacher.Logger.Println("Caching data")
 	cacher.Client.LPush(cacher.Key, string(data))
 }

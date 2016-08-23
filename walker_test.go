@@ -23,7 +23,10 @@ var _ = Describe("ZIPWalker", func() {
 	})
 
 	JustBeforeEach(func() {
-		walker = &nuvi.ZIPWalker{FileExt: fileExt}
+		walker = &nuvi.ZIPWalker{
+			FileExt: fileExt,
+			Logger:  &fakes.FakeLogger{},
+		}
 	})
 
 	It("walks through an XML files", func() {

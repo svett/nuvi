@@ -24,6 +24,7 @@ var _ = Describe("LinkExtractor", func() {
 	JustBeforeEach(func() {
 		extractor = &nuvi.LinkExtractor{
 			FileExt: fileExt,
+			Logger:  &fakes.FakeLogger{},
 		}
 	})
 

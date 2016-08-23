@@ -11,7 +11,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("RedisCacher", func() {
+var _ = Describe("RedisCacher", func() {
 	var (
 		client *fakes.FakeRedisClient
 		cacher *nuvi.RedisCacher
@@ -22,6 +22,7 @@ var _ = FDescribe("RedisCacher", func() {
 		cacher = &nuvi.RedisCacher{
 			Key:    "NEWS_XML",
 			Client: client,
+			Logger: &fakes.FakeLogger{},
 		}
 	})
 

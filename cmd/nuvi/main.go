@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 
 	"gopkg.in/redis.v4"
 
@@ -39,19 +40,23 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	logger := log.New(os.Stderr, "scraper: ", log.LstdFlags)
 	scraper := &nuvi.Scraper{
 		Downloader: nuvi.HTTPDownloader(http.Get),
 		Extractor: &nuvi.LinkExtractor{
 			FileExt: ".zip",
+			Logger:  logger,
 		},
 		ArchiveWalker: &nuvi.ZIPWalker{
 			FileExt: ".xml",
+			Logger:  logger,
 		},
 		Cacher: &nuvi.RedisCacher{
 			Key:    "NEWS_XML",
 			Client: client,
+			Logger: logger,
 		},
+		Logger: logger,
 	}
 
 	if err = scraper.Scrape(url); err != nil {
