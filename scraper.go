@@ -3,6 +3,7 @@ package nuvi
 import (
 	"fmt"
 	"io"
+	"sync"
 )
 
 //go:generate counterfeiter . Downloader
@@ -50,6 +51,7 @@ type Scraper struct {
 	Extractor     Extractor
 	ArchiveWalker ArchiveWalker
 	Cacher        Cacher
+	MaxConn       int
 	Logger        Logger
 }
 
@@ -68,21 +70,44 @@ func (scraper *Scraper) Scrape(url string) error {
 		return err
 	}
 
+	if scraper.MaxConn == 0 {
+		scraper.MaxConn = 4
+	}
+
+	count := 1
+	wg := &sync.WaitGroup{}
+
 	for _, archive := range archives {
-		archiveURL := fmt.Sprintf("%s/%s", url, archive)
-		scraper.Logger.Printf("Downloading %s", archiveURL)
-		zipfile, err := scraper.Downloader.Download(archiveURL)
-		if err != nil {
-			scraper.Logger.Printf("Downloading %s failed with error %v", archiveURL, err)
-			continue
+		count++
+		if count > scraper.MaxConn {
+			scraper.Logger.Printf("Waiting %d files to be downloaded", count)
+			wg.Wait()
+			count = 1
 		}
 
-		scraper.Logger.Printf("Browsing %s", archiveURL)
-		scraper.ArchiveWalker.Walk(zipfile, func(file io.Reader) {
-			scraper.Cacher.Cache(file)
-		})
-
-		zipfile.Close()
+		archiveURL := fmt.Sprintf("%s/%s", url, archive)
+		wg.Add(1)
+		go scraper.scraperArchive(archiveURL, wg)
 	}
+
+	wg.Wait()
 	return nil
+}
+
+func (scraper *Scraper) scraperArchive(archiveURL string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	scraper.Logger.Printf("Downloading %s", archiveURL)
+	zipfile, err := scraper.Downloader.Download(archiveURL)
+	if err != nil {
+		scraper.Logger.Printf("Downloading %s failed with error %v", archiveURL, err)
+		return
+	}
+
+	scraper.Logger.Printf("Browsing %s", archiveURL)
+	scraper.ArchiveWalker.Walk(zipfile, func(file io.Reader) {
+		scraper.Cacher.Cache(file)
+	})
+
+	zipfile.Close()
 }

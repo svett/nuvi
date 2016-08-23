@@ -15,12 +15,14 @@ var (
 	url           string
 	redisAddr     string
 	redisPassword string
+	maxConn       int
 )
 
 func init() {
 	flag.StringVar(&url, "url", "", "Web URL")
 	flag.StringVar(&redisAddr, "redisAddr", "localhost:6379", "Redis Addr")
 	flag.StringVar(&redisPassword, "redisPassword", "", "Redis Password")
+	flag.IntVar(&maxConn, "maxConn", 4, "Max download connections")
 }
 
 func main() {
@@ -42,6 +44,7 @@ func main() {
 	}
 	logger := log.New(os.Stderr, "scraper: ", log.LstdFlags)
 	scraper := &nuvi.Scraper{
+		MaxConn:    maxConn,
 		Downloader: nuvi.HTTPDownloader(http.Get),
 		Extractor: &nuvi.LinkExtractor{
 			FileExt: ".zip",
