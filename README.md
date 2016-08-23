@@ -33,6 +33,12 @@ $ nuvi -url=http_url_to_desired_page \
        -max-parallel-download-conn \
 ```
 
+#### Example
+
+```bash
+$ nuvi -url=http://feed.omgili.com/5Rh5AMTrc4Pv/mainstream/posts/
+```
+
 ### Contribution
 
 Getting the sources and all dependencies with the following git commands:
