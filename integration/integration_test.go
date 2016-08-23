@@ -24,6 +24,7 @@ var _ = Describe("Integration", func() {
 
 	BeforeEach(func() {
 		redisClient = utils.NewRedisClient()
+		redisClient.Del("NEWS_XML")
 
 		page, err := os.Open("../assets/index.html")
 		Expect(err).NotTo(HaveOccurred())
@@ -54,7 +55,9 @@ var _ = Describe("Integration", func() {
 
 	AfterEach(func() {
 		httpServer.Close()
+
 		redisClient.Del("NEWS_XML")
+		redisClient.Close()
 	})
 
 	It("scrapes and caches the dired files", func() {
