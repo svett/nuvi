@@ -45,10 +45,9 @@ var _ = Describe("Integration", func() {
 			} else if r.URL.Path == "/info.zip" {
 				w.WriteHeader(http.StatusOK)
 				w.Write(zipData)
-				return
+			} else {
+				w.WriteHeader(http.StatusNotFound)
 			}
-
-			w.WriteHeader(http.StatusNotFound)
 		}))
 	})
 
