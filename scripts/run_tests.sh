@@ -27,8 +27,12 @@ function fetch_golang_dependencies() {
 
 function run_tests() {
   echo "Running tests"
-  ginkgo .
-  ginkgo integration/
+  run_ginkgo .
+  run_ginkgo integration/
+}
+
+function run_ginkgo() {
+ $GOPATH/bin/ginkgo $1
 }
 
 fail() {
