@@ -63,6 +63,10 @@ You can run all unit and integration tests by executing the following script:
 Note that you need `redis-server` installed. Every integration tests starts and
 stops the server. Therefore, you should not have it running as a deamon.
 
+The `redis-server` is running on port `6379`. If your instance is configured to
+run on different port, you should set the environment variable `REDIS_SERVER_PORT`
+before you execute the tests.
+
 ```bash
 $ ./scripts/run_tests.sh
 ```
