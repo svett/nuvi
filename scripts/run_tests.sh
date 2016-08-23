@@ -1,10 +1,16 @@
 #!/usr/bin/env sh -ue
 
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+source $BASE_DIR/utils.sh
+
 function main() {
+  pushd $BASE_DIR/..
   fetch_submodules
   check_if_redis_exists
   fetch_golang_dependencies
-  run_tests
+  run_tests $PWD
+  popd
 }
 
 function fetch_submodules() {
@@ -27,17 +33,11 @@ function fetch_golang_dependencies() {
 
 function run_tests() {
   echo "Running tests"
-  run_ginkgo .
-  run_ginkgo integration/
+  run_ginkgo -r -skip vendor $1
 }
 
 function run_ginkgo() {
  $GOPATH/bin/ginkgo $1
-}
-
-fail() {
-  echo "$*"
-  exit 1
 }
 
 main
