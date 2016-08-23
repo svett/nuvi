@@ -71,7 +71,7 @@ before you execute the tests.
 $ ./scripts/run_tests.sh
 ```
 
-Also you can use `ginkg` directly:
+Also you can use `ginkgo` binary directly to execute the tests:
 
 ```bash
 # Running the integration tests
