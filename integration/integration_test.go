@@ -11,6 +11,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/svett/nuvi/integration/utils"
 
 	"github.com/onsi/gomega/gexec"
 )
@@ -22,7 +23,7 @@ var _ = Describe("Integration", func() {
 	)
 
 	BeforeEach(func() {
-		redisClient = newRedisClient()
+		redisClient = utils.NewRedisClient()
 
 		page, err := os.Open("../assets/index.html")
 		Expect(err).NotTo(HaveOccurred())

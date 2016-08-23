@@ -7,7 +7,7 @@ import (
 )
 
 // IsPortOpen returns true if port is open
-func IsPortOpen(port uint) bool {
+func IsPortOpen(port int) bool {
 	address, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("localhost:%d", port))
 	if err != nil {
 		return false

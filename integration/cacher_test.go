@@ -7,6 +7,7 @@ import (
 
 	"github.com/svett/nuvi"
 	"github.com/svett/nuvi/fakes"
+	"github.com/svett/nuvi/integration/utils"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,7 +20,7 @@ var _ = Describe("Cacher", func() {
 	)
 
 	BeforeEach(func() {
-		redisClient = newRedisClient()
+		redisClient = utils.NewRedisClient()
 
 		cacher = &nuvi.RedisCacher{
 			Key:    "NEWS_XML",

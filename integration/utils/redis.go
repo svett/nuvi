@@ -5,12 +5,30 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"gopkg.in/redis.v4"
 )
 
 // RedisPort is the default port
-const RedisPort = 6379
+func RedisPort() int {
+	port := os.Getenv("REDIS_SERVER_PORT")
+	if port != "" {
+		if portNo, err := strconv.Atoi(port); err == nil {
+			return portNo
+		}
+	}
+	return 6379
+}
+
+// NewRedisClient creates a new redis client
+func NewRedisClient() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("localhost:%d", RedisPort()),
+		Password: "",
+		DB:       0,
+	})
+}
 
 // RedisRunner runs redis server
 type RedisRunner struct {
@@ -33,8 +51,9 @@ func (runner *RedisRunner) Start(redisArgs ...string) error {
 	}
 
 	runner.process = command.Process
-	if ok := IsPortOpen(RedisPort); !ok {
-		return fmt.Errorf("Redis port %d is not open", RedisPort)
+	port := RedisPort()
+	if ok := IsPortOpen(port); !ok {
+		return fmt.Errorf("Redis port %d is not open", port)
 	}
 
 	return nil
@@ -47,11 +66,8 @@ func (runner *RedisRunner) Stop() error {
 		return err
 	}
 
-	client := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("localhost:%d", RedisPort),
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
+	client := NewRedisClient()
+	defer client.Close()
 
 	_, err = client.Ping().Result()
 	if err == nil {
