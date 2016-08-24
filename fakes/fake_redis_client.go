@@ -19,15 +19,22 @@ type FakeRedisClient struct {
 	lPushReturns struct {
 		result1 *redis.IntCmd
 	}
-	LRangeStub        func(key string, start, stop int64) *redis.StringSliceCmd
-	lRangeMutex       sync.RWMutex
-	lRangeArgsForCall []struct {
+	LIndexStub        func(key string, index int64) *redis.StringCmd
+	lIndexMutex       sync.RWMutex
+	lIndexArgsForCall []struct {
 		key   string
-		start int64
-		stop  int64
+		index int64
 	}
-	lRangeReturns struct {
-		result1 *redis.StringSliceCmd
+	lIndexReturns struct {
+		result1 *redis.StringCmd
+	}
+	LLenStub        func(key string) *redis.IntCmd
+	lLenMutex       sync.RWMutex
+	lLenArgsForCall []struct {
+		key string
+	}
+	lLenReturns struct {
+		result1 *redis.IntCmd
 	}
 }
 
@@ -64,37 +71,68 @@ func (fake *FakeRedisClient) LPushReturns(result1 *redis.IntCmd) {
 	}{result1}
 }
 
-func (fake *FakeRedisClient) LRange(key string, start int64, stop int64) *redis.StringSliceCmd {
-	fake.lRangeMutex.Lock()
-	fake.lRangeArgsForCall = append(fake.lRangeArgsForCall, struct {
+func (fake *FakeRedisClient) LIndex(key string, index int64) *redis.StringCmd {
+	fake.lIndexMutex.Lock()
+	fake.lIndexArgsForCall = append(fake.lIndexArgsForCall, struct {
 		key   string
-		start int64
-		stop  int64
-	}{key, start, stop})
-	fake.lRangeMutex.Unlock()
-	if fake.LRangeStub != nil {
-		return fake.LRangeStub(key, start, stop)
+		index int64
+	}{key, index})
+	fake.lIndexMutex.Unlock()
+	if fake.LIndexStub != nil {
+		return fake.LIndexStub(key, index)
 	} else {
-		return fake.lRangeReturns.result1
+		return fake.lIndexReturns.result1
 	}
 }
 
-func (fake *FakeRedisClient) LRangeCallCount() int {
-	fake.lRangeMutex.RLock()
-	defer fake.lRangeMutex.RUnlock()
-	return len(fake.lRangeArgsForCall)
+func (fake *FakeRedisClient) LIndexCallCount() int {
+	fake.lIndexMutex.RLock()
+	defer fake.lIndexMutex.RUnlock()
+	return len(fake.lIndexArgsForCall)
 }
 
-func (fake *FakeRedisClient) LRangeArgsForCall(i int) (string, int64, int64) {
-	fake.lRangeMutex.RLock()
-	defer fake.lRangeMutex.RUnlock()
-	return fake.lRangeArgsForCall[i].key, fake.lRangeArgsForCall[i].start, fake.lRangeArgsForCall[i].stop
+func (fake *FakeRedisClient) LIndexArgsForCall(i int) (string, int64) {
+	fake.lIndexMutex.RLock()
+	defer fake.lIndexMutex.RUnlock()
+	return fake.lIndexArgsForCall[i].key, fake.lIndexArgsForCall[i].index
 }
 
-func (fake *FakeRedisClient) LRangeReturns(result1 *redis.StringSliceCmd) {
-	fake.LRangeStub = nil
-	fake.lRangeReturns = struct {
-		result1 *redis.StringSliceCmd
+func (fake *FakeRedisClient) LIndexReturns(result1 *redis.StringCmd) {
+	fake.LIndexStub = nil
+	fake.lIndexReturns = struct {
+		result1 *redis.StringCmd
+	}{result1}
+}
+
+func (fake *FakeRedisClient) LLen(key string) *redis.IntCmd {
+	fake.lLenMutex.Lock()
+	fake.lLenArgsForCall = append(fake.lLenArgsForCall, struct {
+		key string
+	}{key})
+	fake.lLenMutex.Unlock()
+	if fake.LLenStub != nil {
+		return fake.LLenStub(key)
+	} else {
+		return fake.lLenReturns.result1
+	}
+}
+
+func (fake *FakeRedisClient) LLenCallCount() int {
+	fake.lLenMutex.RLock()
+	defer fake.lLenMutex.RUnlock()
+	return len(fake.lLenArgsForCall)
+}
+
+func (fake *FakeRedisClient) LLenArgsForCall(i int) string {
+	fake.lLenMutex.RLock()
+	defer fake.lLenMutex.RUnlock()
+	return fake.lLenArgsForCall[i].key
+}
+
+func (fake *FakeRedisClient) LLenReturns(result1 *redis.IntCmd) {
+	fake.LLenStub = nil
+	fake.lLenReturns = struct {
+		result1 *redis.IntCmd
 	}{result1}
 }
 

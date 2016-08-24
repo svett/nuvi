@@ -29,9 +29,9 @@ var _ = Describe("RedisCacher", func() {
 	})
 
 	It("appends the content to a list", func() {
-		client.LRangeReturns(redis.NewStringSliceCmd())
+		client.LLenReturns(redis.NewIntCmd())
 		cacher.Cache(strings.NewReader("Financial Times"))
-		Expect(client.LRangeCallCount()).To(Equal(1))
+		Expect(client.LLenCallCount()).To(Equal(1))
 
 		key, values := client.LPushArgsForCall(0)
 		Expect(key).To(Equal("NEWS_XML"))
@@ -44,7 +44,7 @@ var _ = Describe("RedisCacher", func() {
 			reader := &fakes.FakeReadCloser{}
 			reader.ReadReturns(0, fmt.Errorf("Oh no!"))
 			cacher.Cache(reader)
-			Expect(client.LRangeCallCount()).To(Equal(0))
+			Expect(client.LLenCallCount()).To(Equal(0))
 		})
 	})
 })

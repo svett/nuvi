@@ -12,7 +12,8 @@ import (
 // RedisClient connects to Redis
 type RedisClient interface {
 	LPush(key string, values ...interface{}) *redis.IntCmd
-	LRange(key string, start, stop int64) *redis.StringSliceCmd
+	LIndex(key string, index int64) *redis.StringCmd
+	LLen(key string) *redis.IntCmd
 }
 
 // RedisCacher caches content into redis
@@ -34,12 +35,16 @@ func (cacher *RedisCacher) Cache(reader io.Reader) {
 	// in order to keep uniqueness of the elements
 	// because we need to iterate over the list
 	// O(n) complexity
-	docs, err := cacher.Client.LRange(cacher.Key, 0, -1).Result()
+	length, err := cacher.Client.LLen(cacher.Key).Result()
 	if err != nil {
 		return
 	}
 
-	for _, xmlDoc := range docs {
+	for index := int64(0); index < length; index++ {
+		xmlDoc, err := cacher.Client.LIndex(cacher.Key, index).Result()
+		if err != nil {
+			return
+		}
 		if xmlDoc == text {
 			return
 		}
