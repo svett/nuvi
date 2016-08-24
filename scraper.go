@@ -87,14 +87,14 @@ func (scraper *Scraper) Scrape(url string) error {
 
 		archiveURL := fmt.Sprintf("%s/%s", url, archive)
 		wg.Add(1)
-		go scraper.scraperArchive(archiveURL, wg)
+		go scraper.downloadAndCache(archiveURL, wg)
 	}
 
 	wg.Wait()
 	return nil
 }
 
-func (scraper *Scraper) scraperArchive(archiveURL string, wg *sync.WaitGroup) {
+func (scraper *Scraper) downloadAndCache(archiveURL string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	scraper.Logger.Printf("Downloading %s", archiveURL)
